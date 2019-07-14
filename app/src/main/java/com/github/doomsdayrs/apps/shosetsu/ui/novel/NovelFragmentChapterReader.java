@@ -14,6 +14,7 @@ import android.widget.TextView;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.constraintlayout.widget.ConstraintLayout;
 
 import com.github.Doomsdayrs.api.novelreader_core.services.core.dep.Formatter;
 import com.github.doomsdayrs.apps.shosetsu.R;
@@ -35,7 +36,7 @@ import java.util.Objects;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -47,11 +48,12 @@ import java.util.Objects;
  *
  * @author github.com/doomsdayrs
  */
-public class NovelFragmentChapterView extends AppCompatActivity {
+//TODO MarkDown support
+public class NovelFragmentChapterReader extends AppCompatActivity {
     private String title;
     private ScrollView scrollView;
     public TextView textView;
-    private ProgressBar progressBar;
+    public ProgressBar progressBar;
     public Formatter formatter;
     public String chapterURL;
     private String novelURL;
@@ -81,8 +83,9 @@ public class NovelFragmentChapterView extends AppCompatActivity {
 
     // ERROR SCREEN
     //TODO Handle ERRORs on loading, EVERYWHERE
-    private TextView errorMessage;
-    private Button errorButton;
+    public ConstraintLayout errorView;
+    public TextView errorMessage;
+    public Button errorButton;
 
     /**
      * Save data of view before destroyed
@@ -348,7 +351,7 @@ public class NovelFragmentChapterView extends AppCompatActivity {
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        Log.d("OnCreate", "NovelFragmentChapterView");
+        Log.d("OnCreate", "NovelFragmentChapterReader");
         switch (Settings.themeMode) {
             case 0:
                 setTheme(R.style.Theme_MaterialComponents_Light_NoActionBar);
@@ -359,18 +362,22 @@ public class NovelFragmentChapterView extends AppCompatActivity {
             case 2:
                 setTheme(R.style.ThemeOverlay_MaterialComponents_Dark);
         }
-        setContentView(R.layout.fragment_novel_chapter_view);
+        setContentView(R.layout.fragment_novel_chapter_reader);
         {
+            errorView = findViewById(R.id.network_error);
+            errorMessage = findViewById(R.id.error_message);
+            errorButton = findViewById(R.id.error_button);
             progressBar = findViewById(R.id.fragment_novel_chapter_view_progress);
+            scrollView = findViewById(R.id.fragment_novel_scroll);
+        }
+
+        {
             novelURL = getIntent().getStringExtra("novelURL");
             title = getIntent().getStringExtra("title");
             Toolbar toolbar = findViewById(R.id.toolbar);
             setSupportActionBar(toolbar);
             //getSupportActionBar().setDisplayHomeAsUpEnabled(true);
             formatter = DefaultScrapers.formatters.get(getIntent().getIntExtra("formatter", -1) - 1);
-            scrollView = findViewById(R.id.fragment_novel_scroll);
-
-
             /*
              * Chooses the way the way to save the scroll position
              * the before marshmallow version is untested
@@ -380,7 +387,6 @@ public class NovelFragmentChapterView extends AppCompatActivity {
             } else {
                 scrollView.getViewTreeObserver().addOnScrollChangedListener(this::bottom);
             }
-
             textView = findViewById(R.id.fragment_novel_chapter_view_text);
             textView.setOnClickListener(new NovelFragmentChapterViewHideBar(toolbar));
         }
@@ -402,7 +408,7 @@ public class NovelFragmentChapterView extends AppCompatActivity {
 
         } else if (text == null)
             if (chapterURL != null) {
-                new NovelFragmentChapterViewLoad(progressBar).execute(this);
+                new NovelFragmentChapterViewLoad(this).execute();
             }
 
         if (getSupportActionBar() != null)

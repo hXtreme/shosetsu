@@ -17,7 +17,7 @@ import java.util.concurrent.ExecutionException;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -38,6 +38,8 @@ public class CatalogueSearchQuery implements SearchView.OnQueryTextListener {
 
     @Override
     public boolean onQueryTextSubmit(String query) {
+        catalogueFragment.isQuery = false;
+        catalogueFragment.isInSearch = true;
         try {
             ArrayList<CatalogueNovelCard> searchResults = new CatalogueQuerySearch(catalogueFragment).execute(query).get();
             catalogueFragment.setLibraryCards(searchResults);
@@ -53,12 +55,14 @@ public class CatalogueSearchQuery implements SearchView.OnQueryTextListener {
     @Override
     public boolean onQueryTextChange(String newText) {
         Log.d("Library search", newText);
+        catalogueFragment.isQuery = true;
         ArrayList<CatalogueNovelCard> recycleCards = new ArrayList<>(catalogueFragment.catalogueNovelCards);
+
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             recycleCards.removeIf(recycleCard -> !recycleCard.title.toLowerCase().contains(newText.toLowerCase()));
         } else {
             for (int x = recycleCards.size() - 1; x >= 0; x--) {
-                if (!recycleCards.get(x).title.contains(newText)) {
+                if (!recycleCards.get(x).title.toLowerCase().contains(newText.toLowerCase())) {
                     recycleCards.remove(x);
                 }
             }
@@ -66,4 +70,6 @@ public class CatalogueSearchQuery implements SearchView.OnQueryTextListener {
         catalogueFragment.setLibraryCards(recycleCards);
         return recycleCards.size() != 0;
     }
+
+
 }

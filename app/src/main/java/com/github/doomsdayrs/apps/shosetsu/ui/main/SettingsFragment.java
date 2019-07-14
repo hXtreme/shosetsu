@@ -26,7 +26,7 @@ import java.util.Objects;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -80,8 +80,8 @@ public class SettingsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d("OnCreateView", "SettingsFragment");
         Statics.mainActionBar.setTitle("Settings");
-        View view = inflater.inflate(R.layout.fragment_settings, container, false);
-        RecyclerView recyclerView = view.findViewById(R.id.fragment_settings_recycler);
+        View view = inflater.inflate(R.layout.settings, container, false);
+        RecyclerView recyclerView = view.findViewById(R.id.settings_recycler);
 
 
         if (recyclerView != null) {

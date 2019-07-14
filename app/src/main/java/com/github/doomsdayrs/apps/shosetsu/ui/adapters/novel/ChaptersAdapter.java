@@ -23,7 +23,7 @@ import com.github.doomsdayrs.apps.shosetsu.variables.enums.Status;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -35,13 +35,13 @@ import com.github.doomsdayrs.apps.shosetsu.variables.enums.Status;
  *
  * @author github.com/doomsdayrs
  */
-public class NovelChaptersAdapter extends RecyclerView.Adapter<ChaptersViewHolder> {
+public class ChaptersAdapter extends RecyclerView.Adapter<ChaptersViewHolder> {
 
 
     private final NovelFragmentChapters novelFragmentChapters;
 
 
-    public NovelChaptersAdapter(NovelFragmentChapters novelFragmentChapters) {
+    public ChaptersAdapter(NovelFragmentChapters novelFragmentChapters) {
         this.novelFragmentChapters = novelFragmentChapters;
     }
 
@@ -66,9 +66,9 @@ public class NovelChaptersAdapter extends RecyclerView.Adapter<ChaptersViewHolde
 
         if (Database.DatabaseChapter.isBookMarked(novelChapter.link)) {
             chaptersViewHolder.library_card_title.setTextColor(chaptersViewHolder.itemView.getResources().getColor(R.color.bookmarked));
-            chaptersViewHolder.popupMenu.getMenu().getItem(0).setTitle("UnBookmark");
+            chaptersViewHolder.popupMenu.getMenu().findItem(R.id.popup_chapter_menu_bookmark).setTitle("UnBookmark");
         } else
-            chaptersViewHolder.popupMenu.getMenu().getItem(0).setTitle("Bookmark");
+            chaptersViewHolder.popupMenu.getMenu().findItem(R.id.popup_chapter_menu_bookmark).setTitle("Bookmark");
 
 
         if (NovelFragmentChapters.contains(novelChapter)) {
@@ -88,9 +88,9 @@ public class NovelChaptersAdapter extends RecyclerView.Adapter<ChaptersViewHolde
         if (Database.DatabaseChapter.isSaved(novelChapter.link)) {
             Log.d("In Storage", StaticNovel.novelURL + " " + novelChapter.link + " " + i);
             chaptersViewHolder.downloadTag.setVisibility(View.VISIBLE);
-            chaptersViewHolder.popupMenu.getMenu().getItem(1).setTitle("Delete");
+            chaptersViewHolder.popupMenu.getMenu().findItem(R.id.popup_chapter_menu_download).setTitle("Delete");
         } else {
-            chaptersViewHolder.popupMenu.getMenu().getItem(1).setTitle("Download");
+            chaptersViewHolder.popupMenu.getMenu().findItem(R.id.popup_chapter_menu_download).setTitle("Download");
             chaptersViewHolder.downloadTag.setVisibility(View.INVISIBLE);
         }
 
@@ -110,11 +110,17 @@ public class NovelChaptersAdapter extends RecyclerView.Adapter<ChaptersViewHolde
                 chaptersViewHolder.status.setText(Status.UNREAD.getStatus());
                 break;
         }
+
+        if (NovelFragmentChapters.selectedChapters.size() <= 0)
+            chaptersViewHolder.itemView.setOnClickListener(chaptersViewHolder);
+        else chaptersViewHolder.itemView.setOnClickListener(view -> chaptersViewHolder.addToSelect());
     }
 
     @Override
     public int getItemCount() {
-        return StaticNovel.novelChapters.size();
+        if (StaticNovel.novelChapters != null)
+            return StaticNovel.novelChapters.size();
+        else return 0;
     }
 
     @Override

@@ -14,7 +14,7 @@ import java.util.List;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -27,6 +27,7 @@ import java.util.List;
  * @author github.com/doomsdayrs
  */
 public class StaticNovel {
+    //TODO fix error with chapters here
     /**
      * Global variable of the current loaded novel
      */
@@ -34,6 +35,5 @@ public class StaticNovel {
     public static NovelPage novelPage;
     public static List<NovelChapter> novelChapters = new ArrayList<>();
     public static Formatter formatter;
-    public static int maxPage = 0;
     public static Status status = Status.UNREAD;
 }

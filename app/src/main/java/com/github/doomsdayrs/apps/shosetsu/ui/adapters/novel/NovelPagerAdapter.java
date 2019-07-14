@@ -1,9 +1,11 @@
 package com.github.doomsdayrs.apps.shosetsu.ui.adapters.novel;
 
+import android.util.Log;
+
+import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
-import android.util.Log;
 
 import java.util.List;
 
@@ -13,7 +15,7 @@ import java.util.List;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -25,12 +27,20 @@ import java.util.List;
  *
  * @author github.com/doomsdayrs
  */
-public class SlidingNovelPageAdapter extends FragmentPagerAdapter {
+public class NovelPagerAdapter extends FragmentPagerAdapter {
     private final List<Fragment> fragments;
+    private String[] titles = {"Info", "Chapters"};
 
-    public SlidingNovelPageAdapter(FragmentManager fm, List<Fragment> fragments) {
+    public NovelPagerAdapter(FragmentManager fm, List<Fragment> fragments) {
         super(fm);
         this.fragments = fragments;
+    }
+
+    //TODO with tracker use this instead the of the above
+    public NovelPagerAdapter(FragmentManager fm, List<Fragment> fragments, boolean ignored) {
+        super(fm);
+        this.fragments = fragments;
+        titles = new String[]{titles[0], titles[1], "Tracker"};
     }
 
     @Override
@@ -42,5 +52,11 @@ public class SlidingNovelPageAdapter extends FragmentPagerAdapter {
     @Override
     public int getCount() {
         return fragments.size();
+    }
+
+    @Nullable
+    @Override
+    public CharSequence getPageTitle(int position) {
+        return titles[position];
     }
 }

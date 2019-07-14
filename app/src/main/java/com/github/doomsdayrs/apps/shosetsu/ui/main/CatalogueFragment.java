@@ -3,20 +3,24 @@ package com.github.doomsdayrs.apps.shosetsu.ui.main;
 import android.content.Context;
 import android.content.res.Configuration;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
-import androidx.recyclerview.widget.GridLayoutManager;
-import androidx.recyclerview.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.SearchView;
+import android.widget.TextView;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.GridLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.github.Doomsdayrs.api.novelreader_core.services.core.dep.Formatter;
 import com.github.doomsdayrs.apps.shosetsu.R;
@@ -38,7 +42,7 @@ import java.util.Objects;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -50,19 +54,26 @@ import java.util.Objects;
  *
  * @author github.com/doomsdayrs
  */
+//TODO fix issue with not loading
 public class CatalogueFragment extends Fragment {
-    //TODO Figure out ghosting lists
     public ArrayList<CatalogueNovelCard> catalogueNovelCards = new ArrayList<>();
     public Formatter formatter;
     public SwipeRefreshLayout swipeRefreshLayout;
     public RecyclerView library_view;
     public int currentMaxPage = 1;
+    public boolean isInSearch = false;
     private Context context;
 
-    public RecyclerView.Adapter library_Adapter;
-    public ProgressBar progressBar;
+    public CatalogueNovelCardsAdapter catalogueNovelCardsAdapter;
     public ProgressBar bottomProgressBar;
 
+    private boolean dontRefresh = false;
+    public boolean isQuery = false;
+
+    public  ConstraintLayout errorView;
+    public  TextView errorMessage;
+    public  Button errorButton;
+    public TextView empty;
     /**
      * Constructor
      */
@@ -81,6 +92,25 @@ public class CatalogueFragment extends Fragment {
         outState.putInt("formatter", formatter.getID() - 1);
     }
 
+    @Override
+    public void onResume() {
+        super.onResume();
+        Log.d("Resume", "HERE");
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+        Log.d("Pause", "HERE");
+        dontRefresh = true;
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        dontRefresh = false;
+    }
+
     /**
      * Creates view
      *
@@ -93,26 +123,32 @@ public class CatalogueFragment extends Fragment {
     @Override
     public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
         Log.d("OnCreateView", "CatalogueFragment");
+        View view = inflater.inflate(R.layout.fragment_catalogue, container, false);
+        {
+            library_view = view.findViewById(R.id.fragment_catalogue_recycler);
+            swipeRefreshLayout = view.findViewById(R.id.fragment_catalogue_refresh);
+            bottomProgressBar = view.findViewById(R.id.fragment_catalogue_progress_bottom);
+            errorView = view.findViewById(R.id.network_error);
+            errorMessage = view.findViewById(R.id.error_message);
+            errorButton = view.findViewById(R.id.error_button);
+            empty = view.findViewById(R.id.fragment_catalogue_empty);
+        }
+
         if (savedInstanceState != null) {
             catalogueNovelCards = (ArrayList<CatalogueNovelCard>) savedInstanceState.getSerializable("list");
             formatter = DefaultScrapers.formatters.get(savedInstanceState.getInt("formatter"));
         }
-        View view = inflater.inflate(R.layout.fragment_catalogue, container, false);
         Statics.mainActionBar.setTitle(formatter.getName());
-        library_view = view.findViewById(R.id.fragment_catalogue_recycler);
-        swipeRefreshLayout = view.findViewById(R.id.fragment_catalogue_refresh);
         swipeRefreshLayout.setOnRefreshListener(new CatalogueRefresh(this));
-        progressBar = view.findViewById(R.id.fragment_catalogue_progress);
-        bottomProgressBar = view.findViewById(R.id.fragment_catalogue_progress_bottom);
         this.context = Objects.requireNonNull(container).getContext();
 
 
-        if (savedInstanceState == null) {
+        if (savedInstanceState == null && !dontRefresh) {
             Log.d("Process", "Loading up latest");
             setLibraryCards(catalogueNovelCards);
             if (catalogueNovelCards.size() > 0) {
                 catalogueNovelCards = new ArrayList<>();
-                library_Adapter.notifyDataSetChanged();
+                catalogueNovelCardsAdapter.notifyDataSetChanged();
             }
             new CataloguePageLoader(this).execute();
         } else
@@ -128,6 +164,8 @@ public class CatalogueFragment extends Fragment {
         SearchView searchView = (SearchView) menu.findItem(R.id.library_search).getActionView();
         searchView.setOnQueryTextListener(new CatalogueSearchQuery(this));
         searchView.setOnCloseListener(() -> {
+            isQuery = false;
+            isInSearch = false;
             setLibraryCards(catalogueNovelCards);
             return true;
         });
@@ -142,10 +180,10 @@ public class CatalogueFragment extends Fragment {
                 library_layoutManager = new GridLayoutManager(context, 2, RecyclerView.VERTICAL, false);
             else
                 library_layoutManager = new GridLayoutManager(context, 4, RecyclerView.VERTICAL, false);
-            library_Adapter = new CatalogueNovelCardsAdapter(recycleCards, getFragmentManager(), formatter);
+            catalogueNovelCardsAdapter = new CatalogueNovelCardsAdapter(recycleCards, getFragmentManager(), formatter);
             library_view.setLayoutManager(library_layoutManager);
             library_view.addOnScrollListener(new CatalogueFragmentHitBottom(this));
-            library_view.setAdapter(library_Adapter);
+            library_view.setAdapter(catalogueNovelCardsAdapter);
         }
     }
 }

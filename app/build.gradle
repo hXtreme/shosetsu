@@ -7,7 +7,7 @@ android {
         minSdkVersion 22
         targetSdkVersion 29
         versionCode 1
-        versionName "v1.1.5-alpha"
+        versionName "v1.1.7-alpha"
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
     buildTypes {
@@ -53,11 +53,15 @@ dependencies {
     androidTestImplementation 'androidx.test:runner:1.2.0'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
     implementation 'androidx.gridlayout:gridlayout:1.0.0'
-    implementation 'com.github.Doomsdayrs:novelreader-extensions:1.1.2'
+
+    implementation 'com.github.Doomsdayrs:novelreader-extensions:1.1.6'
     implementation 'com.github.Doomsdayrs:novelreader-services:1.1.0'
+
     implementation 'com.squareup.picasso:picasso:2.71828'
     implementation 'org.jetbrains:annotations:17.0.0'
     //TODO GITHUB sign in to save backup data to cloud
     implementation 'com.github.kohsuke:github-api:github-api-1.95'
     implementation 'com.github.javiersantos:AppUpdater:2.7'
+    implementation 'us.feras.mdv:markdownview:1.1.0'
+   // implementation 'com.squareup.duktape:duktape-android:1.2.0'
 }

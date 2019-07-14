@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import com.github.Doomsdayrs.api.novelreader_core.services.core.objects.NovelChapter;
 import com.github.doomsdayrs.apps.shosetsu.backend.database.Database;
@@ -15,7 +14,7 @@ import com.github.doomsdayrs.apps.shosetsu.ui.novel.StaticNovel;
 import com.github.doomsdayrs.apps.shosetsu.variables.Statics;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 
 /*
  * This file is part of Shosetsu.
@@ -23,7 +22,7 @@ import java.net.SocketTimeoutException;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -78,28 +77,46 @@ public class NovelLoader extends AsyncTask<Activity, Void, Boolean> {
         this.activity = voids[0];
         StaticNovel.novelPage = null;
         Log.d("Loading", StaticNovel.novelURL);
+        if (loadAll) {
+            if (novelFragment != null && novelFragment.getActivity() != null)
+                novelFragment.getActivity().runOnUiThread(() -> novelFragment.errorView.setVisibility(View.GONE));
+
+        } else if (novelFragmentMain != null && novelFragmentMain.getActivity() != null)
+            novelFragmentMain.getActivity().runOnUiThread(() -> novelFragmentMain.novelFragment.errorView.setVisibility(View.GONE));
+
+
+
         try {
             StaticNovel.novelPage = StaticNovel.formatter.parseNovel(StaticNovel.novelURL);
-
+            if (!Database.DatabaseLibrary.inLibrary(StaticNovel.novelURL)) {
+                Database.DatabaseLibrary.addToLibrary(StaticNovel.formatter.getID(), StaticNovel.novelPage, StaticNovel.novelURL, com.github.doomsdayrs.apps.shosetsu.variables.enums.Status.UNREAD.getA());
+            }
             for (NovelChapter novelChapter : StaticNovel.novelPage.novelChapters)
                 if (!Database.DatabaseChapter.inChapters(novelChapter.link))
                     Database.DatabaseChapter.addToChapters(StaticNovel.novelURL, novelChapter);
-
+            System.out.println(StaticNovel.novelChapters);
+            if (StaticNovel.novelChapters == null)
+                StaticNovel.novelChapters = new ArrayList<>();
             StaticNovel.novelChapters.addAll(StaticNovel.novelPage.novelChapters);
 
             Log.d("Loaded Novel:", StaticNovel.novelPage.title);
             return true;
-        } catch (SocketTimeoutException e) {
-            if (novelFragment != null)
-                activity.runOnUiThread(() -> Toast.makeText(novelFragment.getContext(), "Timeout", Toast.LENGTH_SHORT).show());
-            else
-                activity.runOnUiThread(() -> {
-                    assert novelFragmentMain != null;
-                    Toast.makeText(novelFragmentMain.getContext(), "Timeout", Toast.LENGTH_SHORT).show();
+        } catch (IOException e) {
+            if (loadAll) {
+                if (novelFragment != null && novelFragment.getActivity() != null)
+                    novelFragment.getActivity().runOnUiThread(() -> {
+                        novelFragment.errorView.setVisibility(View.VISIBLE);
+                        novelFragment.errorMessage.setText(e.getMessage());
+                        novelFragment.errorButton.setOnClickListener(view -> new NovelLoader(novelFragment, loadAll).execute(voids));
+                    });
+            } else if (novelFragmentMain != null && novelFragmentMain.getActivity() != null)
+                novelFragmentMain.getActivity().runOnUiThread(() -> {
+                    novelFragmentMain.novelFragment.errorView.setVisibility(View.VISIBLE);
+                    novelFragmentMain.novelFragment.errorMessage.setText(e.getMessage());
+                    novelFragmentMain.novelFragment.errorButton.setOnClickListener(view -> new NovelLoader(novelFragmentMain, loadAll).execute(voids));
                 });
 
-        } catch (IOException e) {
-            e.printStackTrace();
+
         }
         return false;
     }

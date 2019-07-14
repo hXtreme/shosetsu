@@ -1,16 +1,20 @@
 package com.github.doomsdayrs.apps.shosetsu.ui.adapters.catalogue;
 
-import androidx.annotation.NonNull;
-import androidx.fragment.app.FragmentManager;
-import androidx.recyclerview.widget.RecyclerView;
+import android.os.AsyncTask;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.fragment.app.FragmentManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.github.Doomsdayrs.api.novelreader_core.services.core.dep.Formatter;
 import com.github.doomsdayrs.apps.shosetsu.R;
+import com.github.doomsdayrs.apps.shosetsu.backend.database.Database;
 import com.github.doomsdayrs.apps.shosetsu.ui.novel.NovelFragment;
 import com.github.doomsdayrs.apps.shosetsu.ui.novel.StaticNovel;
 import com.github.doomsdayrs.apps.shosetsu.variables.recycleObjects.CatalogueNovelCard;
@@ -24,7 +28,7 @@ import java.util.List;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -37,17 +41,12 @@ import java.util.List;
  * @author github.com/doomsdayrs
  */
 public class CatalogueNovelCardsAdapter extends RecyclerView.Adapter<CatalogueNovelCardsAdapter.NovelCardsViewHolder> {
-    private static List<CatalogueNovelCard> recycleCards;
+    private List<CatalogueNovelCard> recycleCards;
     private final FragmentManager fragmentManager;
     private final Formatter formatter;
 
     public CatalogueNovelCardsAdapter(List<CatalogueNovelCard> recycleCards, FragmentManager fragmentManager, Formatter formatter) {
-        if (CatalogueNovelCardsAdapter.recycleCards != null && !CatalogueNovelCardsAdapter.recycleCards.containsAll(recycleCards)) {
-            CatalogueNovelCardsAdapter.recycleCards = null;
-            CatalogueNovelCardsAdapter.recycleCards = recycleCards;
-        } else if (CatalogueNovelCardsAdapter.recycleCards == null)
-            CatalogueNovelCardsAdapter.recycleCards = recycleCards;
-
+        this.recycleCards = recycleCards;
         this.fragmentManager = fragmentManager;
         this.formatter = formatter;
     }
@@ -68,7 +67,9 @@ public class CatalogueNovelCardsAdapter extends RecyclerView.Adapter<CatalogueNo
         if (recycleCard != null) {
             novelCardsViewHolder.url = recycleCard.novelURL;
             novelCardsViewHolder.library_card_title.setText(recycleCard.title);
-            Picasso.get().load(recycleCard.imageURL).into(novelCardsViewHolder.library_card_image);
+            if (recycleCard.imageURL != null)
+                Picasso.get().load(recycleCard.imageURL).into(novelCardsViewHolder.library_card_image);
+            else novelCardsViewHolder.library_card_image.setVisibility(View.GONE);
         }
 
     }
@@ -78,7 +79,7 @@ public class CatalogueNovelCardsAdapter extends RecyclerView.Adapter<CatalogueNo
         return recycleCards.size();
     }
 
-    static class NovelCardsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
+    static class NovelCardsViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener, View.OnLongClickListener {
         FragmentManager fragmentManager;
         Formatter formatter;
         final ImageView library_card_image;
@@ -90,6 +91,7 @@ public class CatalogueNovelCardsAdapter extends RecyclerView.Adapter<CatalogueNo
             library_card_image = itemView.findViewById(R.id.novel_item_image);
             library_card_title = itemView.findViewById(R.id.textView);
             itemView.setOnClickListener(this);
+            itemView.setOnLongClickListener(this);
         }
 
         @Override
@@ -103,5 +105,46 @@ public class CatalogueNovelCardsAdapter extends RecyclerView.Adapter<CatalogueNo
                     .replace(R.id.fragment_container, novelFragment)
                     .commit();
         }
+
+        @Override
+        public boolean onLongClick(View view) {
+            new add(this).execute(view);
+            return true;
+        }
+
+        static class add extends AsyncTask<View, Void, Void> {
+            NovelCardsViewHolder novelCardsViewHolder;
+
+            public add(NovelCardsViewHolder novelCardsViewHolder) {
+                this.novelCardsViewHolder = novelCardsViewHolder;
+            }
+
+            @Override
+            protected Void doInBackground(View... views) {
+                try {
+                    if (!Database.DatabaseLibrary.inLibrary(novelCardsViewHolder.url)) {
+                        Database.DatabaseLibrary.addToLibrary(novelCardsViewHolder.formatter.getID(), novelCardsViewHolder.formatter.parseNovel(novelCardsViewHolder.url), novelCardsViewHolder.url, com.github.doomsdayrs.apps.shosetsu.variables.enums.Status.UNREAD.getA());
+                        if (views[0] != null)
+                            views[0].post(() -> Toast.makeText(views[0].getContext(), "Added " + novelCardsViewHolder.library_card_title.getText().toString(), Toast.LENGTH_SHORT).show());
+                    }
+                    if (Database.DatabaseLibrary.isBookmarked(novelCardsViewHolder.url)) {
+                        if (views[0] != null)
+                            views[0].post(() -> Toast.makeText(views[0].getContext(), "Already in the library", Toast.LENGTH_SHORT).show());
+                    } else {
+                        Database.DatabaseLibrary.bookMark(novelCardsViewHolder.url);
+                        if (views[0] != null)
+                            views[0].post(() -> Toast.makeText(views[0].getContext(), "Added " + novelCardsViewHolder.library_card_title.getText().toString(), Toast.LENGTH_SHORT).show());
+                    }
+                } catch (Exception e) {
+                    if (views[0] != null)
+                        views[0].post(() -> Toast.makeText(views[0].getContext(), "Failed to add to library: " + novelCardsViewHolder.library_card_title.getText().toString(), Toast.LENGTH_LONG).show());
+                }
+                return null;
+            }
+        }
+
     }
+
+
+
 }

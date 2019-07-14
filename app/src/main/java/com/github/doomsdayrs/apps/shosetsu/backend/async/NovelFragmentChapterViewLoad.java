@@ -3,12 +3,8 @@ package com.github.doomsdayrs.apps.shosetsu.backend.async;
 import android.annotation.SuppressLint;
 import android.os.AsyncTask;
 import android.view.View;
-import android.widget.ProgressBar;
 
-import com.github.doomsdayrs.apps.shosetsu.ui.novel.NovelFragmentChapterView;
-
-import java.io.IOException;
-import java.net.SocketTimeoutException;
+import com.github.doomsdayrs.apps.shosetsu.ui.novel.NovelFragmentChapterReader;
 
 /*
  * This file is part of Shosetsu.
@@ -16,7 +12,7 @@ import java.net.SocketTimeoutException;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -28,32 +24,34 @@ import java.net.SocketTimeoutException;
  *
  * @author github.com/doomsdayrs
  */
-public class NovelFragmentChapterViewLoad extends AsyncTask<NovelFragmentChapterView, Void, String> {
+public class NovelFragmentChapterViewLoad extends AsyncTask<NovelFragmentChapterReader, Void, String> {
     /**
      * Reference to the progress bar
      */
     @SuppressLint("StaticFieldLeak")
     private final
-    ProgressBar progressBar;
+    NovelFragmentChapterReader novelFragmentChapterReader;
 
     /**
      * Constructor
-     *
-     * @param progressBar progress bar to change
      */
-    public NovelFragmentChapterViewLoad(ProgressBar progressBar) {
-        this.progressBar = progressBar;
+    public NovelFragmentChapterViewLoad(NovelFragmentChapterReader novelFragmentChapterReader) {
+        this.novelFragmentChapterReader = novelFragmentChapterReader;
     }
 
     @Override
-    protected String doInBackground(NovelFragmentChapterView... novelFragmentChapterViews) {
+    protected String doInBackground(NovelFragmentChapterReader... novelFragmentChapterReaders) {
+        novelFragmentChapterReader.runOnUiThread(() -> novelFragmentChapterReader.errorView.setVisibility(View.GONE));
         try {
-            novelFragmentChapterViews[0].unformattedText = novelFragmentChapterViews[0].formatter.getNovelPassage(novelFragmentChapterViews[0].chapterURL);
-            novelFragmentChapterViews[0].runOnUiThread(() -> novelFragmentChapterViews[0].setUpReader());
-        } catch (SocketTimeoutException ignored) {
-            // TODO Add error management here
-        } catch (IOException e) {
-            e.printStackTrace();
+            novelFragmentChapterReader.unformattedText = novelFragmentChapterReader.formatter.getNovelPassage(novelFragmentChapterReader.chapterURL);
+            novelFragmentChapterReader.runOnUiThread(novelFragmentChapterReader::setUpReader);
+        } catch (Exception e) {
+            novelFragmentChapterReader.runOnUiThread(() -> {
+                novelFragmentChapterReader.errorView.setVisibility(View.VISIBLE);
+                novelFragmentChapterReader.errorMessage.setText(e.getMessage());
+                novelFragmentChapterReader.errorButton.setOnClickListener(view -> new NovelFragmentChapterViewLoad(novelFragmentChapterReader).execute());
+            });
+
         }
 
         return null;
@@ -65,8 +63,8 @@ public class NovelFragmentChapterViewLoad extends AsyncTask<NovelFragmentChapter
     @Override
     protected void onPreExecute() {
         super.onPreExecute();
-        if (progressBar != null)
-            progressBar.setVisibility(View.VISIBLE);
+        if (novelFragmentChapterReader != null)
+            novelFragmentChapterReader.progressBar.setVisibility(View.VISIBLE);
     }
 
     /**
@@ -77,7 +75,7 @@ public class NovelFragmentChapterViewLoad extends AsyncTask<NovelFragmentChapter
     @Override
     protected void onPostExecute(String s) {
         super.onPostExecute(s);
-        if (progressBar != null)
-            progressBar.setVisibility(View.GONE);
+        if (novelFragmentChapterReader.progressBar != null)
+            novelFragmentChapterReader.progressBar.setVisibility(View.GONE);
     }
 }

@@ -1,6 +1,9 @@
 package com.github.doomsdayrs.apps.shosetsu.ui.listeners;
 
 import androidx.annotation.NonNull;
+
+import com.github.doomsdayrs.apps.shosetsu.ui.main.CatalogueFragment;
+import com.github.doomsdayrs.apps.shosetsu.ui.main.CataloguesFragment;
 import com.google.android.material.navigation.NavigationView;
 import androidx.core.view.GravityCompat;
 import android.util.Log;
@@ -15,7 +18,7 @@ import com.github.doomsdayrs.apps.shosetsu.R;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -51,7 +54,7 @@ public class MainActivityNavSwapFrag implements NavigationView.OnNavigationItemS
                 Log.d("Nav", "Catalogue selected");
                 mainActivity.getSupportFragmentManager().beginTransaction()
                         .addToBackStack("tag")
-                        .replace(R.id.fragment_container, mainActivity.cataloguesFragment)
+                        .replace(R.id.fragment_container, new CataloguesFragment())
                         .commit();
             }
             break;

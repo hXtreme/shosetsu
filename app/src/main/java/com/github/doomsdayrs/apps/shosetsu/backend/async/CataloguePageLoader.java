@@ -18,7 +18,7 @@ import java.util.List;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -63,6 +63,7 @@ public class CataloguePageLoader extends AsyncTask<Integer, Void, Boolean> {
     @Override
     protected Boolean doInBackground(Integer... integers) {
         Log.d("Loading", "Catalogue");
+        catalogueFragment.library_view.post(() -> catalogueFragment.errorView.setVisibility(View.GONE));
         try {
             List<Novel> novels;
 
@@ -75,11 +76,11 @@ public class CataloguePageLoader extends AsyncTask<Integer, Void, Boolean> {
 
             for (Novel novel : novels)
                 catalogueFragment.catalogueNovelCards.add(new CatalogueNovelCard(novel.imageURL, novel.title, novel.link));
-            catalogueFragment.library_view.post(() -> catalogueFragment.library_Adapter.notifyDataSetChanged());
+            catalogueFragment.library_view.post(() -> catalogueFragment.catalogueNovelCardsAdapter.notifyDataSetChanged());
 
             if (catalogueFragmentHitBottom != null) {
                 catalogueFragment.library_view.post(() -> {
-                    catalogueFragment.library_Adapter.notifyDataSetChanged();
+                    catalogueFragment.catalogueNovelCardsAdapter.notifyDataSetChanged();
                     catalogueFragment.library_view.addOnScrollListener(catalogueFragmentHitBottom);
                 });
                 catalogueFragmentHitBottom.running = false;
@@ -89,13 +90,23 @@ public class CataloguePageLoader extends AsyncTask<Integer, Void, Boolean> {
 
             if (catalogueFragment.getActivity() != null)
                 catalogueFragment.getActivity().runOnUiThread(() -> {
-                    catalogueFragment.library_Adapter.notifyDataSetChanged();
+                    catalogueFragment.catalogueNovelCardsAdapter.notifyDataSetChanged();
                     catalogueFragment.swipeRefreshLayout.setRefreshing(false);
                 });
 
             return true;
         } catch (IOException e) {
-            e.printStackTrace();
+            if (catalogueFragment.getActivity() != null)
+                catalogueFragment.getActivity().runOnUiThread(() -> {
+                    catalogueFragment.errorView.setVisibility(View.VISIBLE);
+                        catalogueFragment.errorMessage.setText(e.getMessage());
+                    if (catalogueFragmentHitBottom == null)
+                        catalogueFragment.errorButton.setOnClickListener(view -> new CataloguePageLoader(catalogueFragment).execute(integers));
+                    else
+                        catalogueFragment.errorButton.setOnClickListener(view -> new CataloguePageLoader(catalogueFragment, catalogueFragmentHitBottom).execute(integers));
+
+                });
+
         }
         return false;
     }
@@ -105,7 +116,9 @@ public class CataloguePageLoader extends AsyncTask<Integer, Void, Boolean> {
      */
     @Override
     protected void onCancelled() {
-        catalogueFragment.progressBar.setVisibility(View.GONE);
+        if (catalogueFragmentHitBottom != null)
+            catalogueFragment.bottomProgressBar.setVisibility(View.INVISIBLE);
+        else catalogueFragment.swipeRefreshLayout.setRefreshing(false);
     }
 
     /**
@@ -113,19 +126,23 @@ public class CataloguePageLoader extends AsyncTask<Integer, Void, Boolean> {
      */
     @Override
     protected void onPreExecute() {
-        if (catalogueFragmentHitBottom == null)
-            catalogueFragment.progressBar.setVisibility(View.VISIBLE);
-        else catalogueFragment.bottomProgressBar.setVisibility(View.VISIBLE);
+        if (catalogueFragmentHitBottom != null)
+            catalogueFragment.bottomProgressBar.setVisibility(View.VISIBLE);
+        else catalogueFragment.swipeRefreshLayout.setRefreshing(true);
     }
 
     /**
      * Once done remove progress bar
+     *
      * @param aBoolean result of doInBackground
      */
     @Override
     protected void onPostExecute(Boolean aBoolean) {
-        if (catalogueFragmentHitBottom == null)
-            catalogueFragment.progressBar.setVisibility(View.GONE);
-        else catalogueFragment.bottomProgressBar.setVisibility(View.GONE);
+        if (catalogueFragmentHitBottom != null) {
+            catalogueFragment.bottomProgressBar.setVisibility(View.GONE);
+            if (catalogueFragment.catalogueNovelCards.size() > 0)
+                catalogueFragment.empty.setVisibility(View.GONE);
+        }
+        else catalogueFragment.swipeRefreshLayout.setRefreshing(false);
     }
 }

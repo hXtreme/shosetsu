@@ -5,28 +5,30 @@ import android.content.Context;
 import android.net.ConnectivityManager;
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
 
 import androidx.appcompat.app.ActionBarDrawerToggle;
 import androidx.appcompat.app.AppCompatActivity;
-import androidx.appcompat.app.AppCompatDelegate;
 import androidx.appcompat.widget.Toolbar;
 import androidx.core.view.GravityCompat;
 import androidx.drawerlayout.widget.DrawerLayout;
 
 import com.github.doomsdayrs.apps.shosetsu.backend.Download_Manager;
+import com.github.doomsdayrs.apps.shosetsu.backend.SettingsController;
 import com.github.doomsdayrs.apps.shosetsu.backend.database.DBHelper;
 import com.github.doomsdayrs.apps.shosetsu.backend.database.Database;
-import com.github.doomsdayrs.apps.shosetsu.backend.SettingsController;
 import com.github.doomsdayrs.apps.shosetsu.ui.listeners.MainActivityNavSwapFrag;
-import com.github.doomsdayrs.apps.shosetsu.ui.main.CataloguesFragment;
 import com.github.doomsdayrs.apps.shosetsu.ui.main.DownloadsFragment;
 import com.github.doomsdayrs.apps.shosetsu.ui.main.LibraryFragment;
 import com.github.doomsdayrs.apps.shosetsu.ui.main.SettingsFragment;
 import com.github.doomsdayrs.apps.shosetsu.variables.Settings;
 import com.github.doomsdayrs.apps.shosetsu.variables.Statics;
 import com.github.javiersantos.appupdater.AppUpdater;
+import com.github.javiersantos.appupdater.AppUpdaterUtils;
+import com.github.javiersantos.appupdater.enums.AppUpdaterError;
 import com.github.javiersantos.appupdater.enums.Display;
 import com.github.javiersantos.appupdater.enums.UpdateFrom;
+import com.github.javiersantos.appupdater.objects.Update;
 import com.google.android.material.navigation.NavigationView;
 
 /*
@@ -35,7 +37,7 @@ import com.google.android.material.navigation.NavigationView;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -53,7 +55,7 @@ public class MainActivity extends AppCompatActivity {
     public NavigationView navigationView;
 
     public final LibraryFragment libraryFragment = new LibraryFragment();
-    public final CataloguesFragment cataloguesFragment = new CataloguesFragment();
+
     public final SettingsFragment settingsFragment = new SettingsFragment();
     public final DownloadsFragment downloadsFragment = new DownloadsFragment();
 
@@ -84,17 +86,48 @@ public class MainActivity extends AppCompatActivity {
             case 2:
                 setTheme(R.style.ThemeOverlay_MaterialComponents_Dark);
         }
-        getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES);
+      //  getDelegate().setLocalNightMode(AppCompatDelegate.MODE_NIGHT_YES);
 
-
+        Log.d("Updater", "Start");
         AppUpdater appUpdater = new AppUpdater(this)
-                .setUpdateFrom(UpdateFrom.GITHUB)
-                .setGitHubUserAndRepo("Doomsdyars", "shosetsu")
+                .setUpdateFrom(UpdateFrom.XML)
+                .setUpdateXML("https://raw.githubusercontent.com/Doomsdayrs/shosetsu/master/app/update.xml")
+
                 .setDisplay(Display.DIALOG)
                 .setDisplay(Display.NOTIFICATION)
-                .setDisplay(Display.SNACKBAR);
+                .setDisplay(Display.SNACKBAR)
 
+                .setTitleOnUpdateAvailable("Update available")
+                .setContentOnUpdateAvailable("Check out the latest version available of my app!")
+                .setTitleOnUpdateNotAvailable("Update not available")
+                .setContentOnUpdateNotAvailable("No update available. Check for updates again later!")
+                .setButtonUpdate("Update now?")
+                //    .setButtonUpdateClickListener(...)
+                .setButtonDismiss("Maybe later")
+                //       .setButtonDismissClickListener(...)
+                .setButtonDoNotShowAgain("Huh, not interested")
+                //     .setButtonDoNotShowAgainClickListener(...)
+                .setIcon(R.drawable.ic_system_update_alt_black_24dp)
+                .setCancelable(true)
+                .showEvery(5);
         appUpdater.start();
+
+        AppUpdaterUtils appUpdaterUtils = new AppUpdaterUtils(this)
+                .setUpdateFrom(UpdateFrom.XML).setUpdateXML("https://raw.githubusercontent.com/Doomsdayrs/shosetsu/master/app/update.xml")
+                .withListener(new AppUpdaterUtils.UpdateListener() {
+                    @Override
+                    public void onSuccess(Update update, Boolean isUpdateAvailable) {
+                        Log.d("Latest Version Code", update.getLatestVersion());
+                    }
+
+                    @Override
+                    public void onFailed(AppUpdaterError error) {
+                        Log.d("AppUpdater Error", "Something went wrong");
+                    }
+                });
+        appUpdaterUtils.start();
+
+        Log.d("Updater", "Completed construction");
 
 
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {

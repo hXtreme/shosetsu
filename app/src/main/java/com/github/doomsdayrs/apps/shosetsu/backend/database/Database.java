@@ -10,7 +10,7 @@ import com.github.Doomsdayrs.api.novelreader_core.services.core.objects.NovelPag
 import com.github.doomsdayrs.apps.shosetsu.backend.Download_Manager;
 import com.github.doomsdayrs.apps.shosetsu.backend.SettingsController;
 import com.github.doomsdayrs.apps.shosetsu.variables.DefaultScrapers;
-import com.github.doomsdayrs.apps.shosetsu.variables.download.DownloadItem;
+import com.github.doomsdayrs.apps.shosetsu.variables.DownloadItem;
 import com.github.doomsdayrs.apps.shosetsu.variables.enums.Status;
 import com.github.doomsdayrs.apps.shosetsu.variables.recycleObjects.NovelCard;
 
@@ -29,6 +29,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 
@@ -38,7 +39,7 @@ import java.util.List;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -50,7 +51,6 @@ import java.util.List;
  *
  * @author github.com/doomsdayrs
  */
-//TODO Remove MAX_Page
 public class Database {
     /**
      * SQLITEDatabase
@@ -62,7 +62,7 @@ public class Database {
      * Tables to work with
      */
     public enum Tables {
-        LIBRARY("library"),
+        NOVELS("novels"),
         BOOKMARKS("bookmarks"),
         DOWNLOADS("downloads"),
         CHAPTERS("chapters");
@@ -254,6 +254,26 @@ public class Database {
      * Chapter control
      */
     public static class DatabaseChapter {
+
+
+        /**
+         * @param novelURL
+         * @return Count of chapters left to read
+         */
+        public static int getCountOfChaptersUnread(String novelURL) {
+            Cursor cursor = library.rawQuery("SELECT " + Columns.READ_CHAPTER + " from " + Tables.CHAPTERS + " where " + Columns.NOVEL_URL + "='" + novelURL + "'" + " and " + Columns.READ_CHAPTER + "!=" + Status.READ, null);
+            if (cursor.getCount() <= 0) {
+                cursor.close();
+                return 0;
+            } else {
+                cursor.moveToNext();
+                int count = cursor.getCount();
+                cursor.close();
+                return count;
+            }
+        }
+
+
         /**
          * Updates the Y coordinate
          * Precondition is the chapter is already in the database.
@@ -481,20 +501,48 @@ public class Database {
     }
 
     public static class DatabaseLibrary {
+
+
         /**
-         * adds novel to the library TABLE
-         *
-         * @param novelPage novelPage
+         * Bookmarks the novel
          * @param novelURL  novelURL of the novel
          */
-        public static void addToLibrary(int formatter, NovelPage novelPage, String novelURL, int maxPage, int status) {
+        public static void bookMark(String novelURL) {
+            library.execSQL("update " + Tables.NOVELS + " set " + Columns.BOOKMARKED + "=1 where " + Columns.NOVEL_URL + "='" + novelURL + "'");
+        }
+
+        /**
+         * UnBookmarks the novel
+         *
+         * @param novelURL novelURL
+         * @return if removed successfully
+         */
+        public static void unBookmark(String novelURL) {
+            library.execSQL("update " + Tables.NOVELS + " set " + Columns.BOOKMARKED + "=0 where " + Columns.NOVEL_URL + "='" + novelURL + "'");
+        }
+
+        public static boolean isBookmarked(String novelURL) {
+            Cursor cursor = library.rawQuery("SELECT " + Columns.BOOKMARKED + " from " + Tables.NOVELS + " where " + Columns.NOVEL_URL + " ='" + novelURL + "'", null);
+            if (cursor.getCount() <= 0) {
+                cursor.close();
+                return false;
+            }
+            cursor.moveToNext();
+            System.out.println(Arrays.toString(cursor.getColumnNames()));
+            int a = cursor.getInt(cursor.getColumnIndex("bookmarked"));
+            cursor.close();
+            return a > 0;
+        }
+
+
+        public static void addToLibrary(int formatter, NovelPage novelPage, String novelURL, int status) {
             try {
-                library.execSQL("insert into " + Tables.LIBRARY + "('" +
-                        Columns.NOVEL_URL + "'," + Columns.FORMATTER_ID + "," + Columns.NOVEL_PAGE + "," + Columns.MAX_PAGE + "," + Columns.STATUS + ") values(" +
+                library.execSQL("insert into " + Tables.NOVELS + "(" +
+                        Columns.BOOKMARKED + ",'" + Columns.NOVEL_URL + "'," + Columns.FORMATTER_ID + "," + Columns.NOVEL_PAGE + "," + Columns.STATUS + ") values(" +
+                        "0" + "," +
                         "'" + novelURL + "'," +
                         "'" + formatter + "','" +
                         serialize(novelPage) + "'," +
-                        maxPage + "," +
                         status + ")"
                 );
             } catch (IOException e) {
@@ -502,16 +550,9 @@ public class Database {
             }
         }
 
-        /**
-         * Removes a novel from the library
-         *
-         * @param novelURL novelURL
-         * @return if removed successfully
-         */
         public static boolean removeFromLibrary(String novelURL) {
-            return library.delete(Tables.LIBRARY.toString(), Columns.NOVEL_URL + "='" + novelURL + "'", null) > 0;
+            return library.delete(Tables.NOVELS.toString(), Columns.NOVEL_URL + "='" + novelURL + "'", null) > 0;
         }
-
         /**
          * Is a novel in the library or not
          *
@@ -519,7 +560,7 @@ public class Database {
          * @return yes or no
          */
         public static boolean inLibrary(String novelURL) {
-            Cursor cursor = library.rawQuery("SELECT " + Columns.FORMATTER_ID + " from " + Tables.LIBRARY + " where " + Columns.NOVEL_URL + " ='" + novelURL + "'", null);
+            Cursor cursor = library.rawQuery("SELECT " + Columns.FORMATTER_ID + " from " + Tables.NOVELS + " where " + Columns.NOVEL_URL + " ='" + novelURL + "'", null);
             if (cursor.getCount() <= 0) {
                 cursor.close();
                 return false;
@@ -528,15 +569,16 @@ public class Database {
             return true;
         }
 
+
         /**
          * Get's the entire library to be listed
          *
          * @return the library
          */
         public static ArrayList<NovelCard> getLibrary() {
-            Cursor cursor = library.query(Tables.LIBRARY.toString(),
+            Cursor cursor = library.query(Tables.NOVELS.toString(),
                     new String[]{Columns.NOVEL_URL.toString(), Columns.FORMATTER_ID.toString(), Columns.NOVEL_PAGE.toString()},
-                    null, null, null, null, null);
+                    Columns.BOOKMARKED + "=1", null, null, null, null);
 
             ArrayList<NovelCard> novelCards = new ArrayList<>();
             if (cursor.getCount() <= 0) {
@@ -570,7 +612,7 @@ public class Database {
          * @return Saved novelPage
          */
         public static NovelPage getNovelPage(String novelURL) {
-            Cursor cursor = library.rawQuery("SELECT " + Columns.NOVEL_PAGE + " from " + Tables.LIBRARY + " where " + Columns.NOVEL_URL + "='" + novelURL + "'", null);
+            Cursor cursor = library.rawQuery("SELECT " + Columns.NOVEL_PAGE + " from " + Tables.NOVELS + " where " + Columns.NOVEL_URL + "='" + novelURL + "'", null);
             if (cursor.getCount() <= 0) {
                 cursor.close();
                 return null;
@@ -589,29 +631,12 @@ public class Database {
             return null;
         }
 
-        public static int getMaxPage(String novelURL) {
-            Cursor cursor = library.rawQuery("SELECT " + Columns.MAX_PAGE + " from " + Tables.LIBRARY + " where " + Columns.NOVEL_URL + "='" + novelURL + "'", null);
-            if (cursor.getCount() <= 0) {
-                cursor.close();
-                return 0;
-            } else {
-                cursor.moveToNext();
-                int page = cursor.getInt(cursor.getColumnIndex(Columns.MAX_PAGE.toString()));
-                cursor.close();
-                return page;
-            }
-        }
-
-        public static void setMaxPage(String novelURL, int max) {
-            library.execSQL("update " + Tables.LIBRARY + " set " + Columns.MAX_PAGE + "=" + max + " where " + Columns.NOVEL_URL + "='" + novelURL + "'");
-        }
-
         public static void setStatus(String novelURL, Status status) {
-            library.execSQL("update " + Tables.LIBRARY + " set " + Columns.STATUS + "=" + status + " where " + Columns.NOVEL_URL + "='" + novelURL + "'");
+            library.execSQL("update " + Tables.NOVELS + " set " + Columns.STATUS + "=" + status + " where " + Columns.NOVEL_URL + "='" + novelURL + "'");
         }
 
         public static Status getStatus(String novelURL) {
-            Cursor cursor = library.rawQuery("SELECT " + Columns.STATUS + " from " + Tables.LIBRARY + " where " + Columns.NOVEL_URL + " = '" + novelURL + "'", null);
+            Cursor cursor = library.rawQuery("SELECT " + Columns.STATUS + " from " + Tables.NOVELS + " where " + Columns.NOVEL_URL + " = '" + novelURL + "'", null);
             if (cursor.getCount() <= 0) {
                 cursor.close();
                 return Status.UNREAD;
@@ -632,7 +657,7 @@ public class Database {
         }
 
         public static void updateData(String novelURL, NovelPage novelPage) throws IOException {
-            library.execSQL("update " + Tables.LIBRARY + " set " + Columns.NOVEL_PAGE + "='" + serialize(novelPage) + "' where " + Columns.NOVEL_URL + "='" + novelURL + "'");
+            library.execSQL("update " + Tables.NOVELS + " set " + Columns.NOVEL_PAGE + "='" + serialize(novelPage) + "' where " + Columns.NOVEL_URL + "='" + novelURL + "'");
         }
     }
 
@@ -662,13 +687,14 @@ public class Database {
                 // Library backup
                 {
                     JSONArray libraryArray = new JSONArray();
-                    Cursor cursor = library.rawQuery("select * from " + Tables.LIBRARY, null);
+                    Cursor cursor = library.rawQuery("select * from " + Tables.NOVELS, null);
                     if (!(cursor.getCount() <= 0))
                         while (cursor.moveToNext()) {
                             JSONObject a = new JSONObject();
-                            a.put("novelURL", cursor.getString(cursor.getColumnIndex(Columns.NOVEL_URL.toString())));
-                            a.put("novelPage", cursor.getString(cursor.getColumnIndex(Columns.NOVEL_PAGE.toString())));
-                            a.put("formatterID", cursor.getString(cursor.getColumnIndex(Columns.FORMATTER_ID.toString())));
+                            String[] b = {Columns.BOOKMARKED.toString(), Columns.NOVEL_URL.toString(), Columns.NOVEL_PAGE.toString(), Columns.STATUS.toString(), Columns.FORMATTER_ID.toString()};
+                            for (String c : b)
+                                a.put(c, cursor.getString(cursor.getColumnIndex(c)));
+
                             libraryArray.put(a);
                         }
                     master.put("library", libraryArray);

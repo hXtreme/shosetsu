@@ -52,4 +52,13 @@
     <string name="spacing">Paragraph Spacing</string>
     <string name="no_change">No change</string>
     <string name="indent_size">Indent Size</string>
+    <string name="download_speed">Download speed</string>
+    <string name="settings_download_speed_hint">Sets the wait limit between novel downloading</string>
+    <string name="author_tag">Author:</string>
+    <string name="author">Doomsdayrs</string>
+    <string name="theme">Theme:</string>
+    <string name="select_between">Select between</string>
+    <string name="selection_options">Selection options</string>
+    <string name="remove">Remove</string>
+    <string name="no_results_found">No results found!</string>
 </resources>

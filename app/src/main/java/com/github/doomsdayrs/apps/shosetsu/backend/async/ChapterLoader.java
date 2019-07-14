@@ -5,7 +5,6 @@ import android.app.Activity;
 import android.os.AsyncTask;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
 import com.github.Doomsdayrs.api.novelreader_core.services.core.objects.NovelChapter;
 import com.github.doomsdayrs.apps.shosetsu.backend.database.Database;
@@ -14,7 +13,7 @@ import com.github.doomsdayrs.apps.shosetsu.ui.novel.NovelFragmentChapters;
 import com.github.doomsdayrs.apps.shosetsu.ui.novel.StaticNovel;
 
 import java.io.IOException;
-import java.net.SocketTimeoutException;
+import java.util.ArrayList;
 import java.util.concurrent.TimeUnit;
 
 /*
@@ -23,7 +22,7 @@ import java.util.concurrent.TimeUnit;
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- * Foobar is distributed in the hope that it will be useful,
+ * Shosetsu is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
@@ -74,7 +73,17 @@ public class ChapterLoader extends AsyncTask<Activity, Void, Boolean> {
         this.activity = voids[0];
         StaticNovel.novelPage = null;
         Log.d("ChapLoad", StaticNovel.novelURL);
+        if (novelFragment != null) {
+            if (novelFragment.getActivity() != null)
+                novelFragment.getActivity().runOnUiThread(() -> novelFragment.errorView.setVisibility(View.GONE));
+        } else if (novelFragmentChapters != null)
+            if (novelFragmentChapters.getActivity() != null)
+                novelFragmentChapters.getActivity().runOnUiThread(() -> novelFragmentChapters.novelFragment.errorView.setVisibility(View.GONE));
+
         try {
+            if (StaticNovel.novelChapters == null)
+                StaticNovel.novelChapters = new ArrayList<>();
+
             int page = 1;
             StaticNovel.novelPage = StaticNovel.formatter.parseNovel(StaticNovel.novelURL, page);
             if (StaticNovel.formatter.isIncrementingChapterList()) {
@@ -86,31 +95,36 @@ public class ChapterLoader extends AsyncTask<Activity, Void, Boolean> {
                         if (!Database.DatabaseChapter.inChapters(novelChapter.link)) {
                             mangaCount++;
                             System.out.println("Adding #" + mangaCount + ": " + novelChapter.link);
+
                             StaticNovel.novelChapters.add(novelChapter);
                             Database.DatabaseChapter.addToChapters(StaticNovel.novelURL, novelChapter);
                         }
                     page++;
 
                     try {
-                        TimeUnit.MILLISECONDS.sleep(100);
+                        TimeUnit.MILLISECONDS.sleep(300);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
                 }
             }
             return true;
-        } catch (SocketTimeoutException e) {
-            if (novelFragment != null)
-                activity.runOnUiThread(() -> Toast.makeText(novelFragment.getContext(), "Timeout", Toast.LENGTH_SHORT).show());
-            else
-                activity.runOnUiThread(() -> {
-                    assert novelFragmentChapters != null;
-                    Toast.makeText(novelFragmentChapters.getContext(), "Timeout", Toast.LENGTH_SHORT).show();
-                });
-
-
         } catch (IOException e) {
-            e.printStackTrace();
+            if (novelFragment != null) {
+                if (novelFragment.getActivity() != null)
+                    novelFragment.getActivity().runOnUiThread(() -> {
+                        novelFragment.errorView.setVisibility(View.VISIBLE);
+                        novelFragment.errorMessage.setText(e.getMessage());
+                        novelFragment.errorButton.setOnClickListener(view -> new ChapterLoader(novelFragment).execute(voids));
+                    });
+            } else if (novelFragmentChapters != null)
+                if (novelFragmentChapters.getActivity() != null)
+                    novelFragmentChapters.getActivity().runOnUiThread(() -> {
+                        novelFragmentChapters.novelFragment.errorView.setVisibility(View.VISIBLE);
+                        novelFragmentChapters.novelFragment.errorMessage.setText(e.getMessage());
+                        novelFragmentChapters.novelFragment.errorButton.setOnClickListener(view -> new ChapterLoader(novelFragmentChapters).execute(voids));
+                    });
+
         }
         return false;
     }
