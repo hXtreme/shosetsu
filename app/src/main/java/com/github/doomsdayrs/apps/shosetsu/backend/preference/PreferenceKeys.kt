@@ -1,7 +1,4 @@
-package com.github.doomsdayrs.apps.shosetsu.variables.recycleObjects;
-
-
-import com.github.doomsdayrs.apps.shosetsu.variables.enums.Types;
+package com.github.doomsdayrs.apps.shosetsu.backend.preference
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -22,24 +19,17 @@ import com.github.doomsdayrs.apps.shosetsu.variables.enums.Types;
  * under the License.
  * ====================================================================
  * Shosetsu
- * 14 / June / 2019
+ * 9 / June / 2019
  *
- * @author github.com/doomsdayrs
+ * @author github.com/hXtreme
  */
 
-public class SettingsCard {
+object PreferenceKeys {
+    // Global Preferences
+    const val theme = "pref_theme"
 
-    /**
-     * What kind of settings card this is
-     */
-    public final Types ID;
-
-    /**
-     * Constructor
-     *
-     * @param ID card type
-     */
-    public SettingsCard(Types ID) {
-        this.ID = ID;
-    }
+    // Reader Preferences
+    const val reader_night_mode = "pref_reader_night_mode"
+    const val reader_para_spacing = "reader_para_spacing"
+    const val reader_para_indent = "reader_para_indent"
 }

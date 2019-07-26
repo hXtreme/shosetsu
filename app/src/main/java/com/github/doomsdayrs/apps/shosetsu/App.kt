@@ -1,6 +1,14 @@
-package com.github.doomsdayrs.apps.shosetsu.variables.enums;
+package com.github.doomsdayrs.apps.shosetsu
 
-import org.jetbrains.annotations.NotNull;
+import android.app.Application
+import android.util.Log
+import com.github.doomsdayrs.apps.shosetsu.backend.preference.PreferencesHelper
+import org.kodein.di.Kodein
+import org.kodein.di.KodeinAware
+import org.kodein.di.android.x.androidXModule
+import org.kodein.di.generic.bind
+import org.kodein.di.generic.instance
+import org.kodein.di.generic.singleton
 
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
@@ -21,43 +29,21 @@ import org.jetbrains.annotations.NotNull;
  * under the License.
  * ====================================================================
  * Shosetsu
- * 14 / June / 2019
+ * 9 / June / 2019
  *
- * @author github.com/doomsdayrs
+ * @author github.com/hXtreme
  */
 
-/**
- * Used for setting fragments
- */
-public enum Types {
-    DOWNLOAD("Download"),
-    VIEW("View"),
-    ADVANCED("Advanced"),
-    INFO("Info"),
-    BACKUP("Backup");
+open class App : Application(), KodeinAware {
 
-    /**
-     * Type name
-     */
-    private final String name;
+    override val kodein by Kodein.lazy {
+        import(androidXModule(this@App))
 
-    /**
-     * Constructor
-     *
-     * @param name name of type
-     */
-    Types(String name) {
-        this.name = name;
+        bind<PreferencesHelper>() with singleton { PreferencesHelper(instance()) }
     }
 
-    /**
-     * toString overriding method
-     *
-     * @return name of type
-     */
-    @NotNull
-    @Override
-    public String toString() {
-        return name;
+    override fun onCreate() {
+        Log.d("onCreate App", "Successfully created the App")
+        super.onCreate()
     }
 }

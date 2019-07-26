@@ -1,4 +1,4 @@
-package com.github.doomsdayrs.apps.shosetsu.ui.main.settings.types;
+package com.github.doomsdayrs.apps.shosetsu.ui.main.settings;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,6 +21,7 @@ package com.github.doomsdayrs.apps.shosetsu.ui.main.settings.types;
  * 13 / 07 / 2019
  *
  * @author github.com/doomsdayrs
+ * @author github.com/hXtreme
  */
 
 import android.os.Bundle;
@@ -74,7 +75,7 @@ public class AdvancedSettings extends Fragment {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 if (i >= 0 && i <= 2) {
-                    SettingsController.changeMode(getActivity(), i);
+                    SettingsController.INSTANCE.changeMode(getActivity(), i);
                     adapterView.setSelection(i);
                 }
             }

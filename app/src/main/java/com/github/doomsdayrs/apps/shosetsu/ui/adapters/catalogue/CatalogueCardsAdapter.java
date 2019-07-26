@@ -42,6 +42,7 @@ import java.util.ArrayList;
  * 9 / June / 2019
  *
  * @author github.com/doomsdayrs
+ * @author github.com/hXtreme
  */
 public class CatalogueCardsAdapter extends RecyclerView.Adapter<CatalogueCardsAdapter.CatalogueHolder> {
     public final ArrayList<CatalogueCard> catalogues;
@@ -102,7 +103,7 @@ public class CatalogueCardsAdapter extends RecyclerView.Adapter<CatalogueCardsAd
         @Override
         public void onClick(View v) {
             Log.d("FormatterSelection", formatter.getName());
-            if (SettingsController.isOnline()) {
+            if (SettingsController.INSTANCE.isOnline()) {
                 CatalogueFragment catalogueFragment = new CatalogueFragment();
                 catalogueFragment.setFormatter(formatter);
                 setFormatter(formatter);

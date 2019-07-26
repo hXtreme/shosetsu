@@ -56,6 +56,7 @@ import java.util.List;
  * 9 / June / 2019
  *
  * @author github.com/doomsdayrs
+ * @author github.com/hXtreme
  */
 // TODO cache clearing
 //  >Library, remove all where bookmark = 0
@@ -747,14 +748,14 @@ public class Database {
                     // View
                     {
                         JSONObject viewSettings = new JSONObject();
-                        viewSettings.put("textColor", SettingsController.view.getInt("ReaderTextColor", Color.BLACK));
-                        viewSettings.put("backgroundColor", SettingsController.view.getInt("ReaderBackgroundColor", Color.WHITE));
+                        viewSettings.put("textColor", SettingsController.INSTANCE.getView().getInt("ReaderTextColor", Color.BLACK));
+                        viewSettings.put("backgroundColor", SettingsController.INSTANCE.getView().getInt("ReaderBackgroundColor", Color.WHITE));
                         settingObject.put("view", viewSettings);
                     }
                     // Download
                     {
                         JSONObject downloadSettings = new JSONObject();
-                        downloadSettings.put("path", SettingsController.download.getString("dir", "/storage/emulated/0/Shosetsu/"));
+                        downloadSettings.put("path", SettingsController.INSTANCE.getDownload().getString("dir", "/storage/emulated/0/Shosetsu/"));
                     }
                     master.put("settings", settingObject);
                 }

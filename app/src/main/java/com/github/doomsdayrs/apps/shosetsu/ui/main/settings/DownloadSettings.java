@@ -1,4 +1,4 @@
-package com.github.doomsdayrs.apps.shosetsu.ui.main.settings.types;
+package com.github.doomsdayrs.apps.shosetsu.ui.main.settings;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,6 +21,7 @@ package com.github.doomsdayrs.apps.shosetsu.ui.main.settings.types;
  * 13 / 07 / 2019
  *
  * @author github.com/doomsdayrs
+ * @author github.com/hXtreme
  */
 
 import android.app.Activity;
@@ -62,7 +63,7 @@ public class DownloadSettings extends Fragment {
     }
 
     private void setDir(String dir) {
-        SettingsController.download.edit().putString("dir", dir).apply();
+        SettingsController.INSTANCE.getDownload().edit().putString("dir", dir).apply();
         Download_Manager.shoDir = dir;
         textView.setText(dir);
     }

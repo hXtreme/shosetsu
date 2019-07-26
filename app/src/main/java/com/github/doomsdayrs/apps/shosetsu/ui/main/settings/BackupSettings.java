@@ -1,4 +1,4 @@
-package com.github.doomsdayrs.apps.shosetsu.ui.viewholders;
+package com.github.doomsdayrs.apps.shosetsu.ui.main.settings;
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,34 +21,36 @@ package com.github.doomsdayrs.apps.shosetsu.ui.viewholders;
  * 13 / 07 / 2019
  *
  * @author github.com/doomsdayrs
+ * @author github.com/hXtreme
  */
 
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.View;
-import android.widget.TextView;
+import android.view.ViewGroup;
+import android.widget.Button;
 
 import androidx.annotation.NonNull;
-import androidx.cardview.widget.CardView;
-import androidx.fragment.app.FragmentManager;
-import androidx.recyclerview.widget.RecyclerView;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
 
 import com.github.doomsdayrs.apps.shosetsu.R;
-import com.github.doomsdayrs.apps.shosetsu.ui.listeners.OnSettingsCardClick;
-import com.github.doomsdayrs.apps.shosetsu.variables.enums.Types;
+import com.github.doomsdayrs.apps.shosetsu.backend.database.Database;
 
-public class SettingsCardViewHolder extends RecyclerView.ViewHolder {
-    final TextView library_card_title;
-    final CardView cardView;
-    final FragmentManager fragmentManager;
+public class BackupSettings extends Fragment {
+    Button button;
 
-    public SettingsCardViewHolder(@NonNull View itemView, FragmentManager fragmentManager) {
-        super(itemView);
-        library_card_title = itemView.findViewById(R.id.recycler_settings_title);
-        cardView = itemView.findViewById(R.id.settings_card);
-        this.fragmentManager = fragmentManager;
+    public BackupSettings() {
     }
 
-    public void setType(Types type) {
-        cardView.setOnClickListener(new OnSettingsCardClick(type, fragmentManager));
-        library_card_title.setText(type.toString());
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+        Log.d("OnCreateView", "BackupSettings");
+        View view = inflater.inflate(R.layout.settings_backup, container, false);
+        button = view.findViewById(R.id.settings_backup_now);
+        button.setOnClickListener(view1 -> Database.backupDatabase());
+        return view;
     }
 }

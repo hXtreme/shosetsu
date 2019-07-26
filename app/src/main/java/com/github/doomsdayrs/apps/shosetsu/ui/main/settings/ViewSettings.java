@@ -1,4 +1,28 @@
-package com.github.doomsdayrs.apps.shosetsu.ui.main.settings.types;
+package com.github.doomsdayrs.apps.shosetsu.ui.main.settings;
+
+
+import android.os.Bundle;
+import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
+import android.widget.Spinner;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+
+import com.github.doomsdayrs.apps.shosetsu.R;
+import com.github.doomsdayrs.apps.shosetsu.backend.SettingsController;
+import com.github.doomsdayrs.apps.shosetsu.variables.Settings;
+import com.github.doomsdayrs.apps.shosetsu.variables.recycleObjects.SettingsItem;
+
+import java.util.ArrayList;
+import java.util.List;
+
 /*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
@@ -21,31 +45,8 @@ package com.github.doomsdayrs.apps.shosetsu.ui.main.settings.types;
  * 13 / 07 / 2019
  *
  * @author github.com/doomsdayrs
+ * @author github.com/hXtreme
  */
-
-import android.os.Bundle;
-import android.util.Log;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.AdapterView;
-import android.widget.ArrayAdapter;
-import android.widget.CheckBox;
-import android.widget.Spinner;
-import android.widget.TextView;
-
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.appcompat.app.AlertDialog;
-import androidx.fragment.app.Fragment;
-
-import com.github.doomsdayrs.apps.shosetsu.R;
-import com.github.doomsdayrs.apps.shosetsu.backend.SettingsController;
-import com.github.doomsdayrs.apps.shosetsu.variables.Settings;
-import com.github.doomsdayrs.apps.shosetsu.variables.recycleObjects.SettingsItem;
-
-import java.util.ArrayList;
-import java.util.List;
 
 // TODO: Migrate to using PreferenceScreen and PreferenceGroup.
 public class ViewSettings extends Fragment {
@@ -81,10 +82,10 @@ public class ViewSettings extends Fragment {
         String[] states = {getString(R.string.on), getString(R.string.off)};
         builder.setItems(states,
                 (dialogInterface, i) -> {
-                    if (i == 0) SettingsController.setNightNode();
-                    else SettingsController.unsetNightMode();
+                    if (i == 0) SettingsController.INSTANCE.setNightNode();
+                    else SettingsController.INSTANCE.unsetNightMode();
 
-                    int nightModeStatus = SettingsController.isReaderNightMode()?
+                    int nightModeStatus = SettingsController.INSTANCE.isReaderNightMode()?
                             R.string.on : R.string.off;
                     nightMOdeItem.setDesc(nightModeStatus);
                     nightMOdeItem.invalidate();
@@ -114,7 +115,7 @@ public class ViewSettings extends Fragment {
         // Setup Night Mode
         SettingsItem nightModeItem = new SettingsItem(settingsReaderView.findViewById(R.id.settings_reader_night_mode));
         nightModeItem.setTitle(R.string.reader_night_mode);
-        int nightModeStatus = SettingsController.isReaderNightMode()?
+        int nightModeStatus = SettingsController.INSTANCE.isReaderNightMode()?
                 R.string.on : R.string.off;
         nightModeItem.setDesc(nightModeStatus);
         nightModeItem.setOnClickListener(this::onClickNIghtMode);
@@ -171,7 +172,7 @@ public class ViewSettings extends Fragment {
                                     size = 20;
                                     break;
                             }
-                            SettingsController.setTextSize(size);
+                            SettingsController.INSTANCE.setTextSize(size);
                             adapterView.setSelection(i);
                         }
                     }
@@ -207,7 +208,7 @@ public class ViewSettings extends Fragment {
                     @Override
                     public void onItemSelected(AdapterView<?> adapterView, android.view.View view, int i, long l) {
                         if (i >= 0 && i <= 3) {
-                            SettingsController.changeParagraphSpacing(i);
+                            SettingsController.INSTANCE.changeParagraphSpacing(i);
                             adapterView.setSelection(i);
                         }
                     }
@@ -218,7 +219,7 @@ public class ViewSettings extends Fragment {
                     }
                 });
 
-                SettingsController.changeParagraphSpacing(spaceBack);
+                SettingsController.INSTANCE.changeParagraphSpacing(spaceBack);
                 switch (Settings.paragraphSpacing) {
                     case 0:
                         paragraphSpacing.setSelection(0);
@@ -246,7 +247,7 @@ public class ViewSettings extends Fragment {
                     @Override
                     public void onItemSelected(AdapterView<?> adapterView, android.view.View view, int i, long l) {
                         if (i >= 0 && i <= 3) {
-                            SettingsController.changeIndentSize(i);
+                            SettingsController.INSTANCE.changeIndentSize(i);
                             adapterView.setSelection(i);
                         }
                     }
@@ -256,7 +257,7 @@ public class ViewSettings extends Fragment {
 
                     }
                 });
-                SettingsController.changeIndentSize(spaceBack);
+                SettingsController.INSTANCE.changeIndentSize(spaceBack);
                 indentSize.setSelection(Settings.indentSize);
             }
         }
