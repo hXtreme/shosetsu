@@ -95,7 +95,7 @@ object SettingsController {
 
 
     fun changeMode(activity: Activity, newMode: Int) {
-        if (!(newMode >= 0 && newMode <= 2))
+        if (newMode !in 0..2)
             throw IndexOutOfBoundsException("Non valid int passed")
         Settings.themeMode = newMode
         advanced!!.edit()
