@@ -1,8 +1,14 @@
 package com.github.doomsdayrs.apps.shosetsu.ui.main.settings
 
+import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import androidx.preference.PreferenceScreen
 
 import com.github.doomsdayrs.apps.shosetsu.R
+import com.github.doomsdayrs.apps.shosetsu.variables.Statics
+import com.github.doomsdayrs.apps.shosetsu.variables.Statics.mainActionBar
 import org.kodein.di.Kodein
 
 
@@ -35,7 +41,10 @@ import org.kodein.di.Kodein
  * TODO: Create custom option menu for settings to search specific ones
  */
 class SettingsMainFragment(kodein: Kodein) : SettingsFragment(kodein) {
-
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        mainActionBar.title = "Settings"
+        return super.onCreateView(inflater, container, savedInstanceState)
+    }
     override fun setupPreferenceScreen(screen: PreferenceScreen) : Unit = with (screen) {
         titleRes = R.string.settings
         preference{
